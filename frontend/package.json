@@ -1,0 +1,44 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbo --hostname 0.0.0.0 --port 3000",
+    "build": "NEXT_DISABLE_ESLINT=true next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "@shadcn/ui": "^0.0.4",
+    "@types/react-select": "^5.0.0",
+    "axios": "^1.10.0",
+    "clsx": "^2.1.1",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "next": "15.4.1",
+    "react": "19.1.0",
+    "react-csv": "^2.2.2",
+    "react-dom": "19.1.0",
+    "react-easy-crop": "^5.5.0",
+    "react-hook-form": "^7.60.0",
+    "react-hot-toast": "^2.5.2",
+    "react-select": "^5.10.2",
+    "react-spinners": "^0.17.0",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-csv": "^1.1.10",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
