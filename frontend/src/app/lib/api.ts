@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8000/api', // already includes /api
+  baseURL: 'https://asset-backend-production-acb2.up.railway.app/api', // already includes /api
  
   headers: {
     Accept: 'application/json',
@@ -10,3 +10,4 @@ const instance = axios.create({
 });
 
 export default instance;
+
