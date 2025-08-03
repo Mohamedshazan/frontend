@@ -17,11 +17,19 @@ interface AssetFormData {
   location: string;
 }
 
+interface Department {
+  id: number;
+  name: string;
+}
+
+const assetTypeOptions = ['Laptop', 'Desktop', 'Printer', 'Monitor', 'Projector', 'Router', 'Switch', 'Other'];
+
 export default function EditAssetPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [form, setForm] = useState<AssetFormData>({
     department_id: '',
     brand: '',
@@ -39,14 +47,22 @@ export default function EditAssetPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchAsset = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`/assets/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
 
-        const asset = res.data;
+        const [assetRes, deptRes] = await Promise.all([
+          axios.get(`/assets/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get('/departments', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const asset = assetRes.data;
+        setDepartments(deptRes.data);
+
         setForm({
           department_id: asset.department_id?.toString() || '',
           brand: asset.brand || '',
@@ -59,14 +75,14 @@ export default function EditAssetPage() {
           location: asset.location || '',
         });
       } catch (err) {
-        console.error('Fetch error:', err);
-        setError('Failed to load asset data.');
+        console.error(err);
+        setError('Failed to load asset or department data.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchAsset();
+    if (id) fetchData();
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -121,8 +137,51 @@ export default function EditAssetPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <fieldset disabled={saving} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InputField name="asset_type" label="Asset Type" value={form.asset_type} onChange={handleChange} />
-          <InputField name="department_id" label="Department ID" value={form.department_id} onChange={handleChange} />
+
+          {/* Department Dropdown */}
+          <div>
+            <label htmlFor="department_id" className="block mb-1 text-sm font-medium text-gray-800">
+              Department
+            </label>
+            <select
+              name="department_id"
+              id="department_id"
+              value={form.department_id}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
+            >
+              <option value="">Select Department</option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Asset Type Dropdown */}
+          <div>
+            <label htmlFor="asset_type" className="block mb-1 text-sm font-medium text-gray-800">
+              Asset Type
+            </label>
+            <select
+              name="asset_type"
+              id="asset_type"
+              value={form.asset_type}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
+            >
+              <option value="" disabled>Select Asset Type</option>
+              {assetTypeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <InputField name="location" label="Location" value={form.location} onChange={handleChange} />
           <InputField name="device_name" label="Device Name" value={form.device_name} onChange={handleChange} />
           <InputField name="brand" label="Brand" value={form.brand} onChange={handleChange} />
@@ -130,6 +189,7 @@ export default function EditAssetPage() {
           <InputField name="serial_number" label="Serial Number" value={form.serial_number} onChange={handleChange} />
           <InputField name="os" label="Operating System" value={form.os} onChange={handleChange} optional />
 
+          {/* Status Dropdown */}
           <div className="md:col-span-2">
             <label htmlFor="status" className="block mb-1 text-sm font-medium text-gray-800">Status</label>
             <select
@@ -176,19 +236,15 @@ function InputField({
       <label htmlFor={name} className="block mb-1 text-sm font-medium text-gray-800">
         {label} {optional && <span className="text-gray-400">(optional)</span>}
       </label>
-     <input
-  id={name}
-  name={name}
-  type="text"
-  value={value}
-  onChange={onChange}
-  required={!optional}
-  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
-/>
-
+      <input
+        id={name}
+        name={name}
+        type="text"
+        value={value}
+        onChange={onChange}
+        required={!optional}
+        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900"
+      />
     </div>
   );
 }
-
-
-
