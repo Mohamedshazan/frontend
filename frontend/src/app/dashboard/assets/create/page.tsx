@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/app/lib/api';
 import { isAxiosError } from 'axios';
@@ -15,6 +15,11 @@ interface AssetFormData {
   status: 'live' | 'to_be_disposal' | 'backup';
   asset_type: string;
   location: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
 }
 
 export default function CreateAssetPage() {
@@ -32,8 +37,31 @@ export default function CreateAssetPage() {
     location: '',
   });
 
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch departments on component mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+
+        const res = await axiosInstance.get('/departments', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setDepartments(res.data);
+      } catch (err) {
+        console.error('Failed to fetch departments', err);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -72,8 +100,8 @@ export default function CreateAssetPage() {
           typeof apiMessage === 'string'
             ? apiMessage
             : Array.isArray(apiMessage)
-            ? apiMessage.join(', ')
-            : 'Asset creation failed.'
+              ? apiMessage.join(', ')
+              : 'Asset creation failed.'
         );
         console.error('Backend error:', err.response?.data);
       } else {
@@ -98,7 +126,9 @@ export default function CreateAssetPage() {
         <fieldset disabled={loading} className="space-y-8">
           {/* Asset Type Selector */}
           <div>
-            <label htmlFor="asset_type" className="block text-sm font-semibold text-gray-800 mb-1">Asset Type</label>
+            <label htmlFor="asset_type" className="block text-sm font-semibold text-gray-800 mb-1">
+              Asset Type
+            </label>
             <select
               name="asset_type"
               id="asset_type"
@@ -107,11 +137,21 @@ export default function CreateAssetPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
             >
               <option value="">Select asset type</option>
+              <option value="Desktop">Desktop</option>
               <option value="Laptop">Laptop</option>
-              <option value="PC">PC</option>
-              <option value="Tablet">Tablet</option>
+              <option value="Projector">Projector</option>
+              <option value="Ewis TAB">Ewis TAB</option>
+              <option value="Lenovo Tab">Lenovo Tab</option>
+              <option value="UMIDIGI TAB">UMIDIGI TAB</option>
               <option value="Monitor">Monitor</option>
               <option value="Printer">Printer</option>
+              <option value="EDI Printers">EDI Printers</option>
+              <option value="DeskPhone">DeskPhone</option>
+              <option value="SINGER TV">SINGER TV</option>
+              <option value="Desktop Scanner">Desktop Scanner</option>
+              <option value="Zebra TC56 Scanner">Zebra TC56 Scanner</option>
+              <option value="Wireless Barcode Scanner">Wireless Barcode Scanner</option>
+              <option value="Other Type Scanners">Other Type Scanners</option>
               <option value="Other">Other</option>
             </select>
           </div>
@@ -122,8 +162,29 @@ export default function CreateAssetPage() {
               <div>
                 <h2 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">General Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField name="department_id" label="Department ID" value={form.department_id} onChange={handleChange} />
-                  <InputField name="location" label="Location" value={form.location} onChange={handleChange} />
+                  {/* Department dropdown */}
+                  <div>
+                    <label htmlFor="department_id" className="block text-sm font-semibold text-gray-800 mb-1">
+                      Department
+                    </label>
+                    <select
+                      name="department_id"
+                      id="department_id"
+                      value={form.department_id}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900"
+                    >
+                      <option value="">Select department</option>
+                      {departments.map((dept) => (
+                        <option key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <InputField name="location" label="Current Location" value={form.location} onChange={handleChange} />
                 </div>
               </div>
 
