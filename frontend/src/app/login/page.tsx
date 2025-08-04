@@ -3,10 +3,9 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import api from '@/app/lib/api'; 
+import axios from '@/app/lib/api';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -16,7 +15,11 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -26,52 +29,42 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setError('');
     try {
-const response = await api.post('login', data); // Don't include `/api/` again, since it's already in baseURL
-      const token = response.data?.token;
-      const user = response.data?.user;
+      const { data: res } = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/login`,
+        data
+      );
 
-      if (!token || !user) {
-        throw new Error('Invalid response from server.');
-      }
+      if (!res.token || !res.user) throw new Error('Invalid server response');
 
-      // ✅ Store token, role, and profile info in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', user.role);
-      localStorage.setItem('userName', user.name);
-      localStorage.setItem('userAvatar', user.avatar); // assuming it's a URL
-
-      // Normalize role for routing (e.g., "IT Support" → "it-support")
-      const normalizedRole = user.role.toLowerCase().replace(/\s+/g, '-');
+      // Save auth details
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('role', res.user.role);
+      localStorage.setItem('userName', res.user.name);
 
       // Redirect based on role
-      if (normalizedRole === 'admin') {
-        router.push('/dashboard/admin');
-      } else if (normalizedRole === 'it-support') {
-        router.push('/dashboard/support-requests');
-      } else if (normalizedRole === 'employee') {
-        router.push('/dashboard/employee');
-      } else {
-        router.push('/dashboard');
-      }
+      const normalizedRole = res.user.role.toLowerCase();
+      if (normalizedRole === 'admin') router.push('/dashboard/admin');
+      else if (normalizedRole === 'it') router.push('/dashboard/support-requests');
+      else if (normalizedRole === 'employee') router.push('/dashboard/employee');
+      else router.push('/dashboard');
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        'Login failed. Please try again.';
-      setError(errorMessage);
+      const errorMsg = err.response?.data?.message || err.message || 'Login failed.';
+      setError(errorMsg);
     }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md space-y-6"
+        className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-6"
         noValidate
       >
-        <h2 className="text-2xl font-semibold text-gray-800 text-center">Login</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800">Welcome Back</h2>
+        <p className="text-sm text-gray-500 text-center">Please sign in to your account</p>
 
-        {/* Email Input */}
+        {/* Email */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
@@ -80,20 +73,16 @@ const response = await api.post('login', data); // Don't include `/api/` again, 
             type="email"
             id="email"
             {...register('email')}
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'
+            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
+              errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
             }`}
-            aria-invalid={errors.email ? 'true' : 'false'}
-            aria-describedby={errors.email ? 'email-error' : undefined}
           />
           {errors.email && (
-            <p id="email-error" className="text-red-500 text-sm mt-1" role="alert">
-              {errors.email.message}
-            </p>
+            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
           )}
         </div>
 
-        {/* Password Input */}
+        {/* Password */}
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Password
@@ -102,35 +91,29 @@ const response = await api.post('login', data); // Don't include `/api/` again, 
             type="password"
             id="password"
             {...register('password')}
-            className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
-              errors.password ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'
+            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
+              errors.password ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
             }`}
-            aria-invalid={errors.password ? 'true' : 'false'}
-            aria-describedby={errors.password ? 'password-error' : undefined}
           />
           {errors.password && (
-            <p id="password-error" className="text-red-500 text-sm mt-1" role="alert">
-              {errors.password.message}
-            </p>
+            <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
           )}
         </div>
 
-        {/* Global Error */}
         {error && (
-          <p className="text-red-600 text-center font-medium" role="alert" tabIndex={-1}>
+          <div className="text-red-600 text-center text-sm bg-red-100 px-4 py-2 rounded">
             {error}
-          </p>
+          </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`w-full py-2 px-4 text-white font-medium rounded transition ${
+          className={`w-full py-2 px-4 text-white font-semibold rounded-md ${
             isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
           }`}
         >
-          {isSubmitting ? 'Logging in...' : 'Login'}
+          {isSubmitting ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
     </div>
