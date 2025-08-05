@@ -1,6 +1,6 @@
 'use client';
 
-// import { useAuth } from '@/app/dashboard/context/AuthContext';
+// import { useAuth } from '@/app/dashboard/context/AuthCo.ntext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
