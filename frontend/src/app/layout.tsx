@@ -1,7 +1,7 @@
-// app/layout.tsx
 import './globals.css';
 import { ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { UserProvider } from './dashboard/context/UserContext';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,9 +9,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-gray-50 min-h-screen">
         {/* Toast notifications */}
         <Toaster position="top-right" />
-        
-        {/* App content */}
-        {children}
+
+        {/* Global Auth context */}
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
   );
