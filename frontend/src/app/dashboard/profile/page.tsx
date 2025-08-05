@@ -1,25 +1,26 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from '@/app/lib/api';
+import api from '@/app/lib/api';
+import { useUser } from '@/app/dashboard/context/UserContext';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState({ name: '', avatar: '' });
+  const { setUser } = useUser();
+  const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const name = localStorage.getItem('userName') || '';
-    const avatar = localStorage.getItem('userAvatar') || '';
-    setUser({ name, avatar });
+    setName(localStorage.getItem('userName') || '');
+    setAvatar(localStorage.getItem('userAvatar') || '');
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUser({ ...user, name: e.target.value });
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files?.[0]) {
       const file = e.target.files[0];
       setAvatarFile(file);
       setPreviewUrl(URL.createObjectURL(file));
@@ -27,39 +28,49 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('name', user.name);
+      formData.append('name', name);
       if (avatarFile) {
         formData.append('avatar', avatarFile);
       }
       formData.append('_method', 'PUT');
 
-      const res = await axios.post('/profile', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+      const res = await api.post('/profile', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (res.status === 200) {
         const { name, avatarUrl } = res.data;
+
+        // Save in localStorage
         localStorage.setItem('userName', name);
-        if (avatarUrl) {
-          localStorage.setItem('userAvatar', avatarUrl);
-        }
-        alert('Profile updated successfully!');
-        window.location.reload();
+        if (avatarUrl) localStorage.setItem('userAvatar', avatarUrl);
+
+        // Update global context
+        setUser((prev) => ({
+          ...prev,
+          name,
+          avatarUrl: avatarUrl || prev?.avatarUrl,
+        }));
+
+        setSuccess('Profile updated successfully!');
+        setAvatar(avatarUrl || avatar);
+        setAvatarFile(null);
+        setPreviewUrl(null);
       }
     } catch (err: any) {
       if (err.response?.status === 422) {
-        console.error('❌ Laravel Validation Errors:', err.response.data.errors);
-        alert('Validation failed:\n' + JSON.stringify(err.response.data.errors, null, 2));
+        setError(Object.values(err.response.data.errors).flat().join('\n'));
       } else {
-        console.error('❌ Profile update error:', err);
-        alert('An error occurred during profile update.');
+        setError('An error occurred during profile update.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,13 +78,16 @@ export default function ProfilePage() {
     <div className="max-w-xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
 
+      {error && <p className="mb-4 text-red-500">{error}</p>}
+      {success && <p className="mb-4 text-green-600">{success}</p>}
+
       <div className="mb-4">
         <label className="block text-sm font-semibold mb-1">Name</label>
         <input
           type="text"
-          value={user.name}
-          onChange={handleChange}
-          className="w-full px-4 py-2 border rounded-md"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -85,9 +99,9 @@ export default function ProfilePage() {
           onChange={handleFileChange}
           className="block w-full"
         />
-        {(previewUrl || user.avatar) && (
+        {(previewUrl || avatar) && (
           <img
-            src={previewUrl || user.avatar}
+            src={previewUrl || avatar}
             alt="Avatar Preview"
             className="mt-4 w-20 h-20 rounded-full object-cover border"
           />
@@ -96,9 +110,10 @@ export default function ProfilePage() {
 
       <button
         onClick={handleSave}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-blue-300"
       >
-        Save Changes
+        {loading ? 'Saving...' : 'Save Changes'}
       </button>
     </div>
   );
