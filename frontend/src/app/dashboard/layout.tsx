@@ -54,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen flex flex-col bg-gray-100">
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center relative">
-          <h1 className="text-lg font-semibold text-gray-800">BRANDIX BATI</h1>
+          <h1 className="text-lg font-semibold text-gray-800">BRANDIX BATII</h1>
 
           <div className="flex items-center gap-3">
             <div className="relative">
