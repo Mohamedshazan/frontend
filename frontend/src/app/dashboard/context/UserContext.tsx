@@ -10,7 +10,7 @@ export type User = {
 
 type UserContextType = {
   user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // ✅ TS-safe
+  setUser: React.Dispatch<React.SetStateAction<User | null>>; // ✅ TS-safeddd
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -47,3 +47,4 @@ export const useUser = () => {
   }
   return context;
 };
+
