@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4">Edit Profileee</h1>
+      <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
 
       {error && <p className="mb-4 text-red-500">{error}</p>}
       {success && <p className="mb-4 text-green-600">{success}</p>}
@@ -118,4 +118,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
