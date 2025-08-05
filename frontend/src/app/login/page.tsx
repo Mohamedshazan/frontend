@@ -26,32 +26,36 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const onSubmit = async (data: LoginForm) => {
-    setError('');
-    try {
-      const { data: res } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/login`,
-        data
-      );
+ const onSubmit = async (data: LoginForm) => {
+  setError('');
+  try {
+    const { data: res } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/login`,
+      data
+    );
 
-      if (!res.token || !res.user) throw new Error('Invalid server response');
+    if (!res.token) throw new Error('Invalid server response');
 
-      // Save auth details
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('role', res.user.role);
-      localStorage.setItem('userName', res.user.name);
-
-      // Redirect based on role
-      const normalizedRole = res.user.role.toLowerCase();
-      if (normalizedRole === 'admin') router.push('/dashboard/admin');
-      else if (normalizedRole === 'it') router.push('/dashboard/support-requests');
-      else if (normalizedRole === 'employee') router.push('/dashboard/employee');
-      else router.push('/dashboard');
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || 'Login failed.';
-      setError(errorMsg);
+    // Save auth details
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('role', res.role);
+    localStorage.setItem('userName', res.name);
+    if (res.avatarUrl) {
+      localStorage.setItem('userAvatar', res.avatarUrl);
     }
-  };
+
+    // Redirect based on role
+    const normalizedRole = res.role.toLowerCase();
+    if (normalizedRole === 'admin') router.push('/dashboard/admin');
+    else if (normalizedRole === 'it') router.push('/dashboard/support-requests');
+    else if (normalizedRole === 'employee') router.push('/dashboard/employee');
+    else router.push('/dashboard');
+  } catch (err: any) {
+    const errorMsg = err.response?.data?.message || err.message || 'Login failed.';
+    setError(errorMsg);
+  }
+};
+
 
 
   return (
@@ -73,9 +77,8 @@ export default function LoginPage() {
             type="email"
             id="email"
             {...register('email')}
-            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
-              errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
+              }`}
           />
           {errors.email && (
             <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
@@ -91,9 +94,8 @@ export default function LoginPage() {
             type="password"
             id="password"
             {...register('password')}
-            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${
-              errors.password ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`w-full border px-4 py-2 rounded-md focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'
+              }`}
           />
           {errors.password && (
             <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
@@ -109,9 +111,8 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`w-full py-2 px-4 text-white font-semibold rounded-md ${
-            isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+          className={`w-full py-2 px-4 text-white font-semibold rounded-md ${isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
         >
           {isSubmitting ? 'Signing in...' : 'Sign In'}
         </button>
