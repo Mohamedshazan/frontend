@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      {/* Sidebar + Content */}
+      {/* Sidebar + fContent */}
       <div className="flex flex-1">
         <aside
           className={clsx(
