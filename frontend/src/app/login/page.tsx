@@ -65,7 +65,7 @@ export default function LoginPage() {
         className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-6"
         noValidate
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800">Welcome Back</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800">Welcome to brandix Batti</h2>
         <p className="text-sm text-gray-500 text-center">Please sign in to your account</p>
 
         {/* Email */}
@@ -120,3 +120,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
