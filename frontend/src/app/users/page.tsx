@@ -71,65 +71,90 @@ export default function UsersPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">User Management</h1>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 className="text-3xl font-semibold text-gray-900">User Management</h1>
         <button
           onClick={() => router.push('/dashboard/register')}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="inline-block px-5 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+          aria-label="Add new user"
+          disabled={loading}
         >
           + Add User
         </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500"></div>
+        <div className="flex justify-center py-16" role="status" aria-live="polite" aria-busy="true">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-green-600"></div>
+          <span className="sr-only">Loading users...</span>
         </div>
       ) : error ? (
-        <div className="text-center text-red-500">
-          <p>{error}</p>
+        <div className="text-center text-red-600 mb-6" role="alert">
+          <p className="mb-2">{error}</p>
           <button
             onClick={fetchUsers}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Retry loading users"
           >
             Retry
           </button>
         </div>
       ) : users.length === 0 ? (
-        <p className="text-center text-gray-500 py-6">No users found.</p>
+        <p className="text-center text-gray-500 py-12 text-lg">No users found.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2 border">#</th>
-                <th className="p-2 border">Name</th>
-                <th className="p-2 border">Email</th>
-                <th className="p-2 border">Role</th>
-                <th className="p-2 border">Department</th>
-                <th className="p-2 border">Actions</th>
+        <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-gray-800">
+            <thead className="bg-gray-100">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
+                  #
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
+                  Name
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
+                  Email
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
+                  Role
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
+                  Department
+                </th>
+                <th scope="col" className="px-4 py-3 text-center text-sm font-semibold">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {users.map((user, index) => (
                 <tr
                   key={user.id}
-                  className="text-center hover:bg-gray-50 cursor-pointer"
+                  tabIndex={0}
+                  className="cursor-pointer hover:bg-green-50 focus:bg-green-100 transition"
                   onClick={() => handleViewAssets(user.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleViewAssets(user.id);
+                    }
+                  }}
+                  aria-label={`View assets agreement for ${user.name}`}
                 >
-                  <td className="p-2 border">{index + 1}</td>
-                  <td className="p-2 border">{user.name}</td>
-                  <td className="p-2 border">{user.email}</td>
-                  <td className="p-2 border">{user.role}</td>
-                  <td className="p-2 border">{user.department?.name || '-'}</td>
-                  <td className="p-2 border space-x-2">
+                  <td className="px-4 py-3 whitespace-nowrap">{index + 1}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{user.name}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{user.email}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{user.role}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">{user.department?.name || '-'}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(user.id);
                       }}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      className="inline-block px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label={`Edit user ${user.name}`}
                     >
                       Edit
                     </button>
@@ -138,7 +163,8 @@ export default function UsersPage() {
                         e.stopPropagation();
                         handleDelete(user.id);
                       }}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="inline-block px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      aria-label={`Delete user ${user.name}`}
                     >
                       Delete
                     </button>
