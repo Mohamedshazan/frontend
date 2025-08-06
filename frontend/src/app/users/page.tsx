@@ -104,7 +104,7 @@ export default function UsersPage() {
         <p className="text-center text-gray-500 py-12 text-lg">No users found.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-gray-800">
+          <table className="min-w-full divide-y divide-gray-200 text-gray-900 bg-white">
             <thead className="bg-gray-100">
               <tr>
                 <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">
@@ -129,19 +129,7 @@ export default function UsersPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {users.map((user, index) => (
-                <tr
-                  key={user.id}
-                  tabIndex={0}
-                  className="cursor-pointer hover:bg-green-50 focus:bg-green-100 transition"
-                  onClick={() => handleViewAssets(user.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleViewAssets(user.id);
-                    }
-                  }}
-                  aria-label={`View assets agreement for ${user.name}`}
-                >
+                <tr key={user.id} className="hover:bg-green-50 focus-within:bg-green-100 transition">
                   <td className="px-4 py-3 whitespace-nowrap">{index + 1}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{user.name}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{user.email}</td>
@@ -149,22 +137,26 @@ export default function UsersPage() {
                   <td className="px-4 py-3 whitespace-nowrap">{user.department?.name || '-'}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-center space-x-2">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(user.id);
-                      }}
+                      onClick={() => handleViewAssets(user.id)}
+                      className="inline-block px-3 py-1 text-sm font-medium text-white bg-teal-600 rounded hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      aria-label={`View asset agreement for ${user.name}`}
+                      type="button"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleEdit(user.id)}
                       className="inline-block px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       aria-label={`Edit user ${user.name}`}
+                      type="button"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(user.id);
-                      }}
+                      onClick={() => handleDelete(user.id)}
                       className="inline-block px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                       aria-label={`Delete user ${user.name}`}
+                      type="button"
                     >
                       Delete
                     </button>
