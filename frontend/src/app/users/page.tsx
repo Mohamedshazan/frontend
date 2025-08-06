@@ -4,14 +4,16 @@ import { useEffect, useState } from 'react';
 import api from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 
+interface Department {
+  name: string;
+}
+
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
-  department?: {
-    name: string;
-  };
+  department?: Department;
 }
 
 export default function UsersPage() {
@@ -55,6 +57,10 @@ export default function UsersPage() {
     router.push(`/users/edit/${id}`);
   };
 
+  const handleViewAssets = (id: number) => {
+    router.push(`/users/${id}/asset-agreement`);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -69,7 +75,7 @@ export default function UsersPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">User Management</h1>
         <button
-          onClick={() => router.push('/users/create')}
+          onClick={() => router.push('/dashboard/register')}
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
           + Add User
@@ -107,7 +113,11 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {users.map((user, index) => (
-                <tr key={user.id} className="text-center hover:bg-gray-50">
+                <tr
+                  key={user.id}
+                  className="text-center hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleViewAssets(user.id)}
+                >
                   <td className="p-2 border">{index + 1}</td>
                   <td className="p-2 border">{user.name}</td>
                   <td className="p-2 border">{user.email}</td>
@@ -115,14 +125,20 @@ export default function UsersPage() {
                   <td className="p-2 border">{user.department?.name || '-'}</td>
                   <td className="p-2 border space-x-2">
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(user.id);
+                      }}
                       className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                      onClick={() => handleEdit(user.id)}
                     >
                       Edit
                     </button>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(user.id);
+                      }}
                       className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      onClick={() => handleDelete(user.id)}
                     >
                       Delete
                     </button>
