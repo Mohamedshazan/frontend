@@ -37,7 +37,7 @@ export default function RegisterPage() {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Unauthorized');
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/register`, data, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/register`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -146,3 +146,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
