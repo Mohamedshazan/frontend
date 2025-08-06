@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { label: 'Manage Assets', href: '/dashboard/assets' },
       { label: 'Support Overview', href: '/dashboard/support-requests' },
       { label: 'Reports', href: '/dashboard/reports' },
-      { label: 'Register User', href: '/register' },
+      { label: 'Register User', href: '/dashboard/register' },
       { label: 'User management', href: '/users' },
     ],
     'it support': [
