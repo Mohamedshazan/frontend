@@ -112,7 +112,7 @@ export default function CreateAssetPage() {
     }
   };
 
-  return (
+ return (
     <div className="max-w-3xl mx-auto p-8 mt-12 bg-white rounded-xl shadow border border-gray-200">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Add New Assets</h1>
 
@@ -188,37 +188,19 @@ export default function CreateAssetPage() {
                 </div>
               </div>
 
-              {/* Asset Specific Info */}
-              {(form.asset_type === 'Laptop' || form.asset_type === 'PC') && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{form.asset_type} Details</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField name="brand" label="Brand" value={form.brand} onChange={handleChange} />
-                    <InputField name="model" label="Model" value={form.model} onChange={handleChange} />
-                    <InputField name="device_name" label="Device Name" value={form.device_name} onChange={handleChange} />
-                    <InputField name="serial_number" label="Serial Number" value={form.serial_number} onChange={handleChange} />
-                    <InputField name="os" label="Operating System" value={form.os} onChange={handleChange} optional />
-                  </div>
+              {/* Asset Details - same for all asset types */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">
+                  {form.asset_type} Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField name="brand" label="Brand" value={form.brand} onChange={handleChange} />
+                  <InputField name="model" label="Model" value={form.model} onChange={handleChange} />
+                  <InputField name="device_name" label="Device Name" value={form.device_name} onChange={handleChange} />
+                  <InputField name="serial_number" label="Serial Number" value={form.serial_number} onChange={handleChange} />
+                  <InputField name="os" label="Operating System" value={form.os} onChange={handleChange} optional />
                 </div>
-              )}
-
-              {form.asset_type === 'Tablet' && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Tablet Details</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <input
-                      type="text"
-                      placeholder="Screen Size (e.g. 10.2 inch)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Tablet Type (e.g. iPad, Android)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm"
-                    />
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Status */}
               <div>
