@@ -9,6 +9,7 @@ import AssetActions from '@/app/components/Assets/AssetActions';
 import { Asset, Filters, OptionType, User, Department } from '@/app/components/Assets/types';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation'; // ✅
 
 const initialFilters: Filters = {
   status: '',
@@ -27,6 +28,8 @@ export default function AssetListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
+
+  const searchParams = useSearchParams(); // ✅
 
   const userOptions: OptionType[] = users.map(user => ({
     value: user.id.toString(),
@@ -50,10 +53,24 @@ export default function AssetListPage() {
 
   useEffect(() => {
     setHasMounted(true);
-    fetchAssets();
     fetchUsers();
     fetchDepartments();
   }, []);
+
+  // ✅ Sync query params → filters
+  useEffect(() => {
+    const params: Filters = {
+      status: searchParams.get('status') || '',
+      asset_type: searchParams.get('asset_type') || '',
+      department_id: searchParams.get('department_id') || '',
+      start_date: searchParams.get('start_date') || '',
+      end_date: searchParams.get('end_date') || '',
+      user_id: searchParams.get('user_id') || '',
+    };
+
+    setFilters(params);
+    fetchAssets(params); // fetch with query filters
+  }, [searchParams]);
 
   const fetchAssets = async (customFilters = filters) => {
     try {
@@ -100,7 +117,6 @@ export default function AssetListPage() {
     }
   };
 
-  // ✅ Unified filter update and auto-reset
   const handleFilterUpdate = (updated: Partial<Filters>) => {
     const newFilters = { ...filters, ...updated };
     setFilters(newFilters);
@@ -131,52 +147,50 @@ export default function AssetListPage() {
     }
   };
 
- const assignUser = async (assetId: number, userId: string | null) => {
-  try {
-    const asset = assets.find(a => a.id === assetId);
-    if (!asset) return;
+  const assignUser = async (assetId: number, userId: string | null) => {
+    try {
+      const asset = assets.find(a => a.id === assetId);
+      if (!asset) return;
 
-    // 🚫 Prevent assignment to "to_be_disposal"
-    if (asset.status === 'to_be_disposal' && userId) {
-      toast.error('Cannot assign a user to an asset marked for disposal.');
-      return;
+      if (asset.status === 'to_be_disposal' && userId) {
+        toast.error('Cannot assign a user to an asset marked for disposal.');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      const selectedUser = users.find(u => u.id.toString() === userId);
+
+      const action = userId ? 'Assigning user...' : 'Unassigning user...';
+      const toastId = toast.loading(action);
+
+      if (userId) {
+        await axios.post(`/assets/${assetId}/assign`, { user_id: userId }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await axios.post(`/assets/${assetId}/unassign`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      setAssets(prev =>
+        prev.map(a =>
+          a.id === assetId
+            ? {
+                ...a,
+                user: selectedUser || null,
+                status: userId ? 'live' : 'backup',
+              }
+            : a
+        )
+      );
+
+      toast.success(userId ? `Assigned to ${selectedUser?.name}` : 'User unassigned', { id: toastId });
+    } catch (err) {
+      console.error('Assignment error:', err);
+      toast.error('Failed to assign user.');
     }
-
-    const token = localStorage.getItem('token');
-    const selectedUser = users.find(u => u.id.toString() === userId);
-
-    const action = userId ? 'Assigning user...' : 'Unassigning user...';
-    const toastId = toast.loading(action);
-
-    if (userId) {
-      await axios.post(`/assets/${assetId}/assign`, { user_id: userId }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } else {
-      await axios.post(`/assets/${assetId}/unassign`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    }
-
-    // Update local state for both user and status
-    setAssets(prev =>
-      prev.map(a =>
-        a.id === assetId
-          ? {
-              ...a,
-              user: selectedUser || null,
-              status: userId ? 'live' : 'backup',
-            }
-          : a
-      )
-    );
-
-    toast.success(userId ? `Assigned to ${selectedUser?.name}` : 'User unassigned', { id: toastId });
-  } catch (err) {
-    console.error('Assignment error:', err);
-    toast.error('Failed to assign user.');
-  }
-};
+  };
 
   return (
     <div className="min-h-screen p-6 bg-gray-50">
