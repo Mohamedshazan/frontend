@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import axios from '@/app/lib/api';
 import toast from 'react-hot-toast';
 import {
@@ -16,9 +17,6 @@ import {
   YAxis,
 } from 'recharts';
 
-// ---------------------------
-// Types
-// ---------------------------
 type SummaryData = {
   totalAssets: number;
   assignedAssets: number;
@@ -32,20 +30,12 @@ type SummaryData = {
   departmentAssetTypes?: Record<string, Record<string, number>>;
 };
 
-// ---------------------------
-// Colors for charts
-// ---------------------------
-const COLORS = [
-  '#3B82F6', '#10B981', '#EF4444', '#F59E0B',
-  '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6',
-];
+const COLORS = ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6'];
 
-// ---------------------------
-// Main Component
-// ---------------------------
 export default function AdminSummary() {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const fetchSummary = async () => {
     setLoading(true);
@@ -67,7 +57,42 @@ export default function AdminSummary() {
     fetchSummary();
   }, []);
 
-  const backupAssets = summary?.backupAssets || 0;
+  const handleCardClick = (filterType: string) => {
+  let queryParams: Record<string, string> = {};
+  let basePath = '/dashboard/assets'; // default for assets
+
+  switch (filterType) {
+    case 'Total Assets':
+      queryParams = {};
+      break;
+    case 'Live Assets':
+      queryParams = { status: 'live' };
+      break;
+    case 'Backup Assets':
+      queryParams = { status: 'backup' };
+      break;
+    case 'To Be Disposed':
+      queryParams = { status: 'to_be_disposal' };
+      break;
+
+    // ✅ Support cards now go to /dashboard/support-requests
+    case 'Support - Pending':
+      queryParams = { status: 'pending' };
+      basePath = '/dashboard/support-requests';
+      break;
+    case 'Support - In Progress':
+      queryParams = { status: 'In Progress' };
+      basePath = '/dashboard/support-requests';
+      break;
+    case 'Support - Resolved':
+      queryParams = { status: 'resolved' };
+      basePath = '/dashboard/support-requests';
+      break;
+  }
+
+  const search = new URLSearchParams(queryParams).toString();
+  router.push(`${basePath}?${search}`);
+};
 
   if (loading || !summary) {
     return (
@@ -82,9 +107,10 @@ export default function AdminSummary() {
     );
   }
 
+  const backupAssets = summary.backupAssets || 0;
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
         <button
@@ -95,24 +121,21 @@ export default function AdminSummary() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <StatCard title="Total Assets" value={summary.totalAssets} color="blue" icon="💼" />
-        <StatCard title="Live Assets" value={summary.assignedAssets} color="green" icon="📦" />
-        <StatCard title="Backup Assets" value={backupAssets} color="red" icon="🧰" />
-        <StatCard title="To Be Disposed" value={summary.toBeDisposedAssets || 0} color="gray" icon="🗑️" />
-        <StatCard title="Support - Pending" value={summary.supportPending} color="orange" icon="⏳" />
-        <StatCard title="Support - In Progress" value={summary.supportInProgress} color="yellow" icon="🔧" />
-        <StatCard title="Support - Resolved" value={summary.supportResolved} color="emerald" icon="✅" />
+        <StatCard title="Total Assets" value={summary.totalAssets} color="blue" icon="💼" onClick={() => handleCardClick('Total Assets')} />
+        <StatCard title="Live Assets" value={summary.assignedAssets} color="green" icon="📦" onClick={() => handleCardClick('Live Assets')} />
+        <StatCard title="Backup Assets" value={backupAssets} color="red" icon="🧰" onClick={() => handleCardClick('Backup Assets')} />
+        <StatCard title="To Be Disposed" value={summary.toBeDisposedAssets || 0} color="gray" icon="🗑️" onClick={() => handleCardClick('To Be Disposed')} />
+        <StatCard title="Support - Pending" value={summary.supportPending} color="orange" icon="⏳" onClick={() => handleCardClick('Support - Pending')} />
+        <StatCard title="Support - In Progress" value={summary.supportInProgress} color="yellow" icon="🔧" onClick={() => handleCardClick('Support - In Progress')} />
+        <StatCard title="Support - Resolved" value={summary.supportResolved} color="emerald" icon="✅" onClick={() => handleCardClick('Support - Resolved')} />
       </div>
 
-      {/* Pie Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-        <BreakdownPieChart title="Assets by Department" data={summary.assetsByDepartment} />
-        <BreakdownPieChart title="Assets by Type" data={summary.assetsByType} />
+        <BreakdownPieChart title="Assets by Department" data={summary.assetsByDepartment} onClick={(dept) => router.push(`/dashboard/assets?department_id=${dept}`)} />
+        <BreakdownPieChart title="Assets by Type" data={summary.assetsByType} onClick={(type) => router.push(`/dashboard/assets?asset_type=${type}`)} />
       </div>
 
-      {/* Stacked Bar Chart for Department & Type */}
       {summary.departmentAssetTypes && (
         <div className="mt-10 bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Assets by Department & Type</h3>
@@ -138,20 +161,7 @@ export default function AdminSummary() {
   );
 }
 
-// ---------------------------
-// Stat Card
-// ---------------------------
-function StatCard({
-  title,
-  value,
-  color,
-  icon,
-}: {
-  title: string;
-  value: number;
-  color: string;
-  icon?: string;
-}) {
+function StatCard({ title, value, color, icon, onClick }: { title: string; value: number; color: string; icon?: string; onClick?: () => void }) {
   const colorMap: Record<string, string[]> = {
     blue: ['border-blue-500', 'text-blue-600'],
     green: ['border-green-500', 'text-green-600'],
@@ -161,11 +171,10 @@ function StatCard({
     emerald: ['border-emerald-500', 'text-emerald-600'],
     gray: ['border-gray-500', 'text-gray-600'],
   };
-
   const [borderColor, textColor] = colorMap[color] || ['border-gray-300', 'text-gray-600'];
 
   return (
-    <div className={`bg-white border-l-4 ${borderColor} shadow rounded-lg p-5`}>
+    <div onClick={onClick} className={`bg-white border-l-4 ${borderColor} shadow rounded-lg p-5 cursor-pointer hover:shadow-lg transition`}>
       <div className="flex items-center justify-between">
         <h2 className="text-md font-semibold text-gray-700">{title}</h2>
         <span className="text-xl">{icon}</span>
@@ -175,40 +184,19 @@ function StatCard({
   );
 }
 
-// ---------------------------
-// Pie Chart Breakdown Card
-// ---------------------------
-function BreakdownPieChart({
-  title,
-  data = {},
-}: {
-  title: string;
-  data?: Record<string, number>;
-}) {
-  const entries = Object.entries(data || {});
-  const chartData = entries.map(([name, value]) => ({ name, value }));
-
+function BreakdownPieChart({ title, data = {}, onClick }: { title: string; data?: Record<string, number>; onClick?: (key: string) => void }) {
+  const chartData = Object.entries(data || {}).map(([name, value]) => ({ name, value }));
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h3 className="text-lg font-bold text-gray-800 mb-4">{title}</h3>
-      {chartData.length === 0 ? (
-        <p className="text-gray-500 italic">No data available.</p>
-      ) : (
+      {chartData.length === 0 ? <p className="text-gray-500 italic">No data available.</p> : (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
+              <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label
+                onClick={(entry: any) => onClick && onClick(entry.name)}
               >
-                {chartData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
+                {chartData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
               </Pie>
               <Tooltip />
               <Legend layout="vertical" verticalAlign="middle" align="right" />
@@ -220,9 +208,6 @@ function BreakdownPieChart({
   );
 }
 
-// ---------------------------
-// Utility: Convert departmentAssetTypes to chart format
-// ---------------------------
 function prepareDepartmentTypeChartData(departmentAssetTypes: Record<string, Record<string, number>>) {
   const allTypes = new Set<string>();
   const chartData: any[] = [];
