@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from '@/app/lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
+import { useSearchParams } from 'next/navigation'; // ✅ NEW
 
 type Ticket = {
   id: number;
@@ -59,17 +60,24 @@ export default function SupportRequestPage() {
     to_date: '',
   });
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+  const searchParams = useSearchParams(); // ✅
 
-  const fetchTickets = async () => {
+  useEffect(() => {
+    // ✅ On page load or when query changes, sync filters
+    const statusParam = searchParams.get('status') || '';
+    const newFilters = { ...filters, status: statusParam };
+    setFilters(newFilters);
+    fetchTickets(newFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const fetchTickets = async (customFilters = filters) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get('/support-requests', {
         headers: { Authorization: `Bearer ${token}` },
-        params: filters,
+        params: customFilters,
       });
       setTickets(response.data);
     } catch (err) {
@@ -186,7 +194,7 @@ export default function SupportRequestPage() {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button
-          onClick={fetchTickets}
+          onClick={() => fetchTickets(filters)}
           className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
         >
           Apply
